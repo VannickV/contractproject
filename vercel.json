@@ -1,9 +1,21 @@
 {
-  "version": 2,
-  "builds": [
-    { "src": "api/gen.js", "use": "@vercel/node" }
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ],
-  "routes": [
-    { "src": "/api/gen", "dest": "/api/gen.js" }
+  "functions": {
+    "api/gen.js": {
+      "runtime": "nodejs18.x"
+    }
+  },
+  "builds": [
+    {
+      "src": "index.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "api/gen.js",
+      "use": "@vercel/node"
+    }
   ]
 }
