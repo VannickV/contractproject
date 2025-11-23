@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="nl"><head><meta charset="UTF-8"><title>ContractFast – Direct contracten</title>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<style>body{font-family:Arial;max-width:800px;margin:40px auto;padding:20px;background:#f9f9f9}
+.c{background:#fff;padding:30px;border-radius:12px;box-shadow:0 5px 20px rgba(0,0,0,.1)}
+select,input,textarea{width:100%;padding:12px;margin:10px 0;border:1px solid #ddd;border-radius:8px;font-size:16px}
+button{padding:16px 32px;background:#0066ff;color:#fff;border:none;border-radius:8px;font-size:18px;cursor:pointer}
+.hidden{display:none}</style></head><body>
+<div class="c"><h1 style="text-align:center;color:#0066ff">ContractFast ⚡</h1>
+<p style="text-align:center">Professionele contracten in seconden</p>
+
+<select id="type" onchange="show()"><option value="">– Kies type –</option>
+<option value="nda">Geheimhoudingsovereenkomst (NDA)</option>
+<option value="diensten">Dienstenovereenkomst</option>
+<option value="freelance">Freelance-opdracht</option></select>
+
+<div id="nda" class="hidden"><h2>NDA</h2>
+<input placeholder="Wie deelt informatie?" id="n1">
+<input placeholder="Wie ontvangt informatie?" id="n2">
+<input placeholder="Doel van de NDA" id="n3"></div>
+
+<div id="diensten" class="hidden"><h2>Dienstenovereenkomst</h2>
+<input placeholder="Opdrachtgever" id="d1">
+<input placeholder="Opdrachtnemer" id="d2">
+<textarea placeholder="Wat moet er gedaan worden?" rows="4" id="d3"></textarea>
+<input placeholder="Bedrag (€)" type="number" id="d4"></div>
+
+<div id="freelance" class="hidden"><h2>Freelance-opdracht</h2>
+<input placeholder="Opdrachtgever" id="f1">
+<input placeholder="Freelancer" id="f2">
+<textarea placeholder="Omschrijving opdracht" rows="4" id="f3"></textarea>
+<input placeholder="Tarief (€)" type="number" id="f4"></div>
+
+<button onclick="gen()" id="btn" disabled>Genereer contract → Download PDF</button>
+<p id="status"></p></div>
+
+<script>
+function show(){document.querySelectorAll('#nda,#diensten,#freelance').forEach(e=>e.classList.add('hidden'));
+  const v=document.getElementById('type').value; if(v){document.getElementById(v).classList.remove('hidden'); document.getElementById('btn').disabled=false;}}
+async function gen(){
+  const t=document.getElementById('type').value; let p={};
+  if(t==='nda') p={a:document.getElementById('n1').value,b:document.getElementById('n2').value,c:document.getElementById('n3').value};
+  if(t==='diensten') p={a:document.getElementById('d1').value,b:document.getElementById('d2').value,c:document.getElementById('d3').value,d:document.getElementById('d4').value};
+  if(t==='freelance') p={a:document.getElementById('f1').value,b:document.getElementById('f2').value,c:document.getElementById('f3').value,d:document.getElementById('f4').value};
+  document.getElementById('status').textContent='Bezig…';
+  const r=await fetch("/api/gen",{method:"POST",body:JSON.stringify({type:t,params:p})});
+  const j=await r.json();
+  if(j.text){
+    const {jsPDF}=window.jspdf; const doc=new jsPDF();
+    doc.setFontSize(12); doc.text(j.text,10,10,{maxWidth:190});
+    doc.save(t+"_"+new Date().toISOString().slice(0,10)+".pdf");
+    document.getElementById('status').innerHTML='PDF gedownload!';
+  }else document.getElementById('status').textContent='Fout: '+ (j.error || 'onbekend');
+}
+</script>
+</body></html>
